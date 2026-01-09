@@ -1,0 +1,422 @@
+4th 
+Design Verilog HDL to implement Binary Adder-Subtractor – Half and Full Adder, Half 
+and Full Subtractor.
+
+
+design.sv(design code)
+
+// Code your design here
+`timescale 1ns/1ps
+
+//---------------- HALF ADDER ----------------
+module half_adder (
+    input  A, B,
+    output Sum, Carry
+);
+    assign Sum   = A ^ B;
+    assign Carry = A & B;
+endmodule
+
+//---------------- FULL ADDER ----------------
+module full_adder (
+    input  A, B, Cin,
+    output Sum, Carry
+);
+    assign Sum   = A ^ B ^ Cin;
+    assign Carry = (A & B) | (B & Cin) | (A & Cin);
+endmodule
+
+//---------------- HALF SUBTRACTOR ----------------
+module half_subtractor (
+    input  A, B,
+    output Diff, Borrow
+);
+    assign Diff   = A ^ B;
+    assign Borrow = (~A) & B;
+endmodule
+
+//---------------- FULL SUBTRACTOR ----------------
+module full_subtractor (
+    input  A, B, Bin,
+    output Diff, Borrow
+);
+    assign Diff   = A ^ B ^ Bin;
+    assign Borrow = (~A & B) | (~(A ^ B) & Bin);
+endmodule 
+
+
+
+testbench.sv(testbench code)
+
+// Code your testbench here
+// or browse Examples
+`timescale 1ns/1ps
+module tb_adder_subtractor;
+
+    reg A, B, Cin, Bin;
+    wire Sum, Carry;
+    wire Diff, Borrow;
+
+    // Instantiate modules
+    half_adder HA (.A(A), .B(B), .Sum(Sum), .Carry(Carry));
+    full_adder FA (.A(A), .B(B), .Cin(Cin), .Sum(Sum), .Carry(Carry));
+    half_subtractor HS (.A(A), .B(B), .Diff(Diff), .Borrow(Borrow));
+    full_subtractor FS (.A(A), .B(B), .Bin(Bin), .Diff(Diff), .Borrow(Borrow));
+
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars(0, tb_adder_subtractor);
+
+        $display("Time | A B Cin Bin | Sum Carry | Diff Borrow");
+        $display("---------------------------------------------");
+
+        A=0; B=0; Cin=0; Bin=0; #10;
+        $display("%4t | %b %b  %b   %b  |  %b     %b   |  %b     %b",
+                  $time,A,B,Cin,Bin,Sum,Carry,Diff,Borrow);
+
+        A=0; B=1; Cin=0; Bin=0; #10;
+        $display("%4t | %b %b  %b   %b  |  %b     %b   |  %b     %b",
+                  $time,A,B,Cin,Bin,Sum,Carry,Diff,Borrow);
+
+        A=1; B=0; Cin=1; Bin=1; #10;
+        $display("%4t | %b %b  %b   %b  |  %b     %b   |  %b     %b",
+                  $time,A,B,Cin,Bin,Sum,Carry,Diff,Borrow);
+
+        A=1; B=1; Cin=1; Bin=1; #10;
+        $display("%4t | %b %b  %b   %b  |  %b     %b   |  %b     %b",
+                  $time,A,B,Cin,Bin,Sum,Carry,Diff,Borrow);
+
+        $finish;
+    end
+endmodule
+
+
+
+
+5th
+Design Verilog HDL to implement Decimal adder.
+
+
+design.sv(design code) 
+
+
+module bcd_adder(
+    input  [3:0] A,
+    input  [3:0] B,
+    input        Cin,
+    output [3:0] Sum,
+    output       Cout
+);
+
+  wire [4:0] temp_sum;
+  wire [4:0] corrected_sum;
+  wire correction;
+
+  // Step 1: Binary addition
+  assign temp_sum = A + B + Cin;
+
+  // Step 2: Check if correction needed
+  assign correction = (temp_sum > 9);
+
+  // Step 3: Add 6 if needed
+  assign corrected_sum = correction ? (temp_sum + 5'd6) : temp_sum;
+
+  // Outputs
+  assign Sum  = corrected_sum[3:0];
+  assign Cout = corrected_sum[4];
+
+endmodule
+
+
+testbench.sv(testbench code) 
+
+`timescale 1ns/1ps
+
+module tb_bcd_adder;
+
+  reg  [3:0] A, B;
+  reg        Cin;
+  wire [3:0] Sum;
+  wire       Cout;
+
+  bcd_adder DUT(A, B, Cin, Sum, Cout);
+
+  initial begin
+    $dumpfile("bcd_adder.vcd");
+    $dumpvars(0, tb_bcd_adder);
+
+    // Initialize
+    A = 0; B = 0; Cin = 0;
+    #5;
+
+    $display("===================================");
+    $display(" DECIMAL (BCD) ADDER OUTPUT ");
+    $display(" A   B   Cin | Cout  Sum ");
+    $display("-----------------------------------");
+
+    // Test cases
+    A=4'd3; B=4'd4; Cin=0; #10; $display(" 3   4    0  |  %b     %d", Cout, Sum);
+    A=4'd5; B=4'd4; Cin=0; #10; $display(" 5   4    0  |  %b     %d", Cout, Sum);
+    A=4'd7; B=4'd6; Cin=0; #10; $display(" 7   6    0  |  %b     %d", Cout, Sum);
+    A=4'd9; B=4'd9; Cin=0; #10; $display(" 9   9    0  |  %b     %d", Cout, Sum);
+    A=4'd8; B=4'd7; Cin=1; #10; $display(" 8   7    1  |  %b     %d", Cout, Sum);
+
+    $finish;
+  end
+endmodule
+
+
+
+
+6th
+Design Verilog program to implement Different types of multiplexer like 2:1, 4:1 and 8:1. 
+
+
+design.sv(designcode)
+
+`timescale 1ns/1ps
+module mux4to1(
+    input  wire [3:0] D,    // Inputs: D0, D1, D2, D3
+    input  wire [1:0] Sel,  // 2-bit select line
+    output wire Y           // Output
+);
+    assign Y = (Sel == 2'b00) ? D[0] :
+               (Sel == 2'b01) ? D[1] :
+               (Sel == 2'b10) ? D[2] :
+                                 D[3];  // Sel==11
+endmodule
+
+
+
+testbench.sv(teshbench code)
+
+
+`timescale 1ns/1ps
+module tb_mux4to1;
+    reg [3:0] D;       // Inputs
+    reg [1:0] Sel;     // Select line
+    wire Y;            // Output
+    // Instantiate the 4:1 MUX
+    mux4to1 uut (
+        .D(D),
+        .Sel(Sel),
+        .Y(Y)
+    );
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars(0, tb_mux4to1);
+        $display("Time | Sel | D3 D2 D1 D0 | Y");
+        $display("-------------------------------");
+        // Test all selections
+        D = 4'b1010;      // D3=1, D2=0, D1=1, D0=0
+        Sel = 2'b00; #10; $display("%4t | %b  | %b %b %b %b | %b", $time, Sel, D[3], D[2], D[1], D[0], Y);
+        Sel = 2'b01; #10; $display("%4t | %b  | %b %b %b %b | %b", $time, Sel, D[3], D[2], D[1], D[0], Y);
+        Sel = 2'b10; #10; $display("%4t | %b  | %b %b %b %b | %b", $time, Sel, D[3], D[2], D[1], D[0], Y);
+        Sel = 2'b11; #10; $display("%4t | %b  | %b %b %b %b | %b", $time, Sel, D[3], D[2], D[1], D[0], Y);
+        $finish;
+    end
+endmodule
+
+
+7th 
+Design Verilog program to implement types of De-Multiplexer. 
+
+design.sv(design code)
+
+`timescale 1ns/1ps
+// ---------------------------------------
+// 1 : 2 DE-MULTIPLEXER
+// ---------------------------------------
+module demux1to2(
+    input  din,
+    input  sel,
+    output y0, y1
+);
+    assign y0 = (~sel) & din;
+    assign y1 = ( sel) & din;
+endmodule
+// ---------------------------------------
+// 1 : 4 DE-MULTIPLEXER
+// ---------------------------------------
+module demux1to4(
+    input        din,
+    input  [1:0] sel,
+    output [3:0] y
+);
+    assign y[0] = (sel == 2'b00) ? din : 1'b0;
+    assign y[1] = (sel == 2'b01) ? din : 1'b0;
+    assign y[2] = (sel == 2'b10) ? din : 1'b0;
+    assign y[3] = (sel == 2'b11) ? din : 1'b0;
+endmodule
+// ---------------------------------------
+// 1 : 8 DE-MULTIPLEXER
+// ---------------------------------------
+module demux1to8(
+    input        din,
+    input  [2:0] sel,
+    output [7:0] y
+);
+    assign y[0] = (sel == 3'd0) ? din : 1'b0;
+    assign y[1] = (sel == 3'd1) ? din : 1'b0;
+    assign y[2] = (sel == 3'd2) ? din : 1'b0;
+    assign y[3] = (sel == 3'd3) ? din : 1'b0;
+    assign y[4] = (sel == 3'd4) ? din : 1'b0;
+    assign y[5] = (sel == 3'd5) ? din : 1'b0;
+    assign y[6] = (sel == 3'd6) ? din : 1'b0;
+    assign y[7] = (sel == 3'd7) ? din : 1'b0;
+endmodule
+
+
+
+testbench.sv(testbench code)
+
+`timescale 1ns/1ps
+module tb;
+    // 1:2 Demux
+    reg din, s2;
+    wire y0_2, y1_2;
+    // 1:4 Demux
+    reg        d4;
+    reg  [1:0] s4;
+    wire [3:0] y4;
+    // 1:8 Demux
+    reg        d8;
+    reg  [2:0] s8;
+    wire [7:0] y8;
+    // Instantiate
+    demux1to2 D2(din, s2, y0_2, y1_2);
+    demux1to4 D4(d4, s4, y4);
+    demux1to8 D8(d8, s8, y8);
+    integer i;
+    initial begin
+        $dumpfile("demux_waves.vcd");
+        $dumpvars(0, tb);
+        // -----------------------------
+        // Test 1:2 DEMUX
+        // -----------------------------
+        $display("===== 1:2 DEMUX =====");
+        din = 1;
+        for (i = 0; i < 2; i++) begin
+            s2 = i;
+            #5;
+            $display("din=%b sel=%b | y0=%b y1=%b", din, s2, y0_2, y1_2);
+        end
+        // -----------------------------
+        // Test 1:4 DEMUX
+        // -----------------------------
+        $display("\n===== 1:4 DEMUX =====");
+        d4 = 1;
+        for (i = 0; i < 4; i++) begin
+            s4 = i;
+            #5;
+            $display("din=%b sel=%b | y=%b", d4, s4, y4);
+        end
+        // -----------------------------
+        // Test 1:8 DEMUX
+        // -----------------------------
+        $display("\n===== 1:8 DEMUX =====");
+        d8 = 1;
+        for (i = 0; i < 8; i++) begin
+            s8 = i;
+            #5;
+            $display("din=%b sel=%0d | y=%b", d8, s8, y8);
+        end
+        $finish;
+    end
+endmodule
+
+
+8th
+Design Verilog program for implementing various types of Flip-Flops such as SR, JK and D. 
+
+
+
+
+design.sv(design code)
+
+`timescale 1ns/1ps
+// -----------------------------------------
+// SR Flip-Flop (Level triggered)
+// -----------------------------------------
+module sr_ff(
+    input  S, R, clk,
+    output reg Q
+);
+    always @(posedge clk) begin
+        case ({S,R})
+            2'b00: Q <= Q;      // No change
+            2'b01: Q <= 0;      // Reset
+            2'b10: Q <= 1;      // Set
+            2'b11: Q <= 1'bx;   // Invalid condition
+        endcase
+    end
+endmodule
+// -----------------------------------------
+// JK Flip-Flop
+// -----------------------------------------
+module jk_ff(
+    input J, K, clk,
+    output reg Q
+);
+    always @(posedge clk) begin
+        case ({J,K})
+            2'b00: Q <= Q;      // Hold
+            2'b01: Q <= 0;      // Reset
+            2'b10: Q <= 1;      // Set
+            2'b11: Q <= ~Q;     // Toggle
+        endcase
+    end
+endmodule
+// -----------------------------------------
+// D Flip-Flop
+// -----------------------------------------
+module d_ff(
+    input D, clk,
+    output reg Q
+);
+    always @(posedge clk) begin
+        Q <= D;                // Just store D on clock
+    end
+endmodule
+
+
+
+testbench.sv(testbench code)
+
+`timescale 1ns/1ps
+module tb;
+    // Inputs
+    reg S, R, J, K, D, clk;
+    // Outputs
+    wire Q_sr, Q_jk, Q_d;
+    // Instantiate
+    sr_ff  SRF(S, R, clk, Q_sr);
+    jk_ff  JKF(J, K, clk, Q_jk);
+    d_ff   DF(D, clk, Q_d);
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;   // 10ns clock period
+    end
+    initial begin
+        $dumpfile("waves.vcd");
+        $dumpvars(0, tb);
+        $display("Time | S R | SR_Q   || J K | JK_Q   || D | D_Q");
+        $display("--------------------------------------------------");
+        // Test Flip-Flops inputs over time
+        S=0; R=0; J=0; K=0; D=0;
+        #10;
+        S=1; R=0; J=1; K=0; D=1; #10;
+        S=0; R=1; J=0; K=1; D=0; #10;
+        S=1; R=1; J=1; K=1; D=1; #10;  // SR invalid, JK toggle
+        S=0; R=0; J=0; K=0; D=1; #10;
+        $finish;
+    end
+    always @(posedge clk) begin
+        $display("%4t | %b %b |   %b    || %b %b |   %b    || %b |  %b",
+                 $time, S, R, Q_sr, J, K, Q_jk, D, Q_d);
+    end
+endmodule
+
+
+
